@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AvionAi - AI Assistant</title>
+    <!-- Add Supabase script -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Add Quicksand font -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        /* Navbar Styles - Updated to match AvionAi.html */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #4CAF50;
+            text-decoration: none;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        .nav-link:hover {
+            color: #4CAF50;
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #nav-username {
+            background: rgba(76, 175, 80, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            margin-left: 1rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        /* Adjust chat container position */
+        body {
+            padding-top: 80px;
+        }
+
+        /* Remove the back button as we now have navbar */
+        .back-button {
+            display: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/api/placeholder/1920/1080') center/cover fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('sliderimg1.jpg') center/cover fixed;
+        }
+
+        .chat-container {
+            width: 400px;
+            background-color: #8BC6EC;
+            background-image: radial-gradient(circle, rgba(238,174,202,1) 3%, rgba(132,141,216,1) 57%, rgba(34,110,228,1) 100%);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .chat-container:hover {
+            transform: translateY(-5px);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #578a8a, #006666);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-header img {
+            width: 35px;
+            height: 35px;
+            margin-right: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+            padding: 2px;
+        }
+
+        .chat-box {
+            padding: 20px;
+            height: 350px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            background: wheat;
+
+            scroll-behavior: smooth;
+        }
+
+        .chat-box::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-box::-webkit-scrollbar-thumb {
+            background: #008080;
+            border-radius: 3px;
+        }
+
+        .chat-message {
+            padding: 12px 16px;
+            border-radius: 15px;
+            margin-bottom: 12px;
+            max-width: 80%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #8e1010, #d50303);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            background: #f0f0f0;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid rgba(0, 128, 128, 0.2);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid rgba(0, 128, 128, 0.3);
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input input:focus {
+            border-color: #008080;
+        }
+
+        .chat-input button {
+            background: linear-gradient(135deg, #008080, #006666);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            margin-left: 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-input button:active {
+            transform: translateY(0);
+        }
+
+        /* Update the back button position */
+        .back-button {
+            position: fixed;
+            top: 100px; /* Changed from 20px to 100px to move it below navbar */
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #008080, #006666);
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .back-button:active {
+            transform: translateY(0);
+        }
+
+        /* Add these new responsive navbar styles */
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            z-index: 1002;
+        }
+
+        .hamburger div {
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            margin: 5px 0;
+            transition: all 0.3s ease;
+        }
+
+        @media screen and (max-width: 768px) {
+            /* Navbar adjustments */
+            .navbar {
+                padding: 0.8rem;
+            }
+
+            .hamburger {
+                display: block;
+                margin-left: auto; /* Push to right */
+            }
+
+            .nav-links {
+                position: fixed;
+                right: -100%;
+                top: 0;
+                height: 100vh;
+                width: 100%;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(10px);
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                transition: 0.5s ease;
+                padding: 4rem 2rem 2rem 2rem;
+                z-index: 1001;
+            }
+
+            .nav-links.active {
+                right: 0;
+            }
+
+            .nav-link {
+                margin: 1rem 0;
+                font-size: 1.2rem;
+            }
+
+            /* Hamburger Animation */
+            .hamburger.active .line1 {
+                transform: rotate(-45deg) translate(-5px, 6px);
+            }
+
+            .hamburger.active .line2 {
+                opacity: 0;
+            }
+
+            .hamburger.active .line3 {
+                transform: rotate(45deg) translate(-5px, -6px);
+            }
+
+            #nav-username {
+                margin: 1rem 0;
+            }
+
+            .navbar-brand {
+                font-size: 1.4rem;
+            }
+
+            /* Content adjustments */
+            .container {
+                margin-top: 4rem;
+                padding: 1rem;
+            }
+
+            /* Specific adjustments for each page */
+            /* For AvionAi.html */
+            .title {
+                margin-top: 2rem;
+                font-size: 1.8rem;
+            }
+
+            /* For chatbot.html */
+            .chat-container {
+                margin-top: 4rem;
+                height: calc(100vh - 5rem);
+                width: 95%;
+            }
+
+            /* For community.html */
+            .header {
+                margin-top: 4rem;
+                padding: 1rem;
+            }
+
+            .create-post {
+                margin-top: 2rem;
+                width: 95%;
+            }
+
+            /* For index (2).html */
+            .recognition-card {
+                margin-top: 4rem;
+                width: 95%;
+            }
+
+            /* General body adjustments */
+            body {
+                padding-top: 0;
+                min-height: 100vh;
+                overflow-x: hidden;
+            }
+
+            /* Fix overlapping issues */
+            .overlay {
+                z-index: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+
+
+
+    <nav class="navbar">
+        <a href="AvionAi.html" class="navbar-brand">AvionAI</a>
+        <div class="hamburger">
+            <div class="line1"></div>
+            <div class="line2"></div>
+            <div class="line3"></div>
+        </div>
+        <div class="nav-links">
+            <a href="AvionAi.html" class="nav-link">Home</a>
+            <a href="index(2).html" class="nav-link">Bird Identifier</a>
+            <a href="community.html" class="nav-link">Community</a>
+            <a href="chatbot.html" class="nav-link">AI Assistant</a>
+            <span id="nav-username">Loading...</span>
+        </div>
+    </nav>
+    <!-- Back Button -->
+    <button class="back-button" onclick="window.location.href='./AvionAi.html'">←</button>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <img src="chatbot.jpg" alt="Bird Logo"> 
+            🦜 AVION Chatbot 🦜
+        </div>
+        <div class="chat-box" id="chat-box"></div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Ask AVION about birds...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Your existing script remains exactly the same
+        async function sendMessage() {
+            const inputField = document.getElementById("user-input");
+            const message = inputField.value;
+            if (!message) return;
+            
+            const chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML += `<div class='chat-message user-message'>${message}</div>`;
+            inputField.value = "";
+            
+            const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBTT-HpVwM7sB1nyN4Vcnd9d7ekdRlXjnU", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    "contents": [
+                        {"role": "user", "parts": [{"text": "hi\n"}]},
+                        {"role": "model", "parts": [{"text": "Hi there! How can I help you with a medical question today?\n"}]},
+                        {"role": "user", "parts": [{"text": message}]}
+                    ],
+                    "systemInstruction": {
+                        "role": "user",
+                        "parts": [{"text": "You are an expert ornithologist chatbot designed to provide detailed yet concise information about bird species. Your purpose is to answer only bird-related questions and politely decline any unrelated queries. When a user asks about a bird, provide a structured yet brief response that includes the bird's common and scientific name, its color and appearance, natural habitat and geographic location, average lifespan, diet and feeding habits, and any unique traits or behaviors. Ensure the response is informative but not overly lengthy, delivering essential facts in a clear and engaging manner. If a user asks about a non-bird topic, politely inform them that you specialize only in birds"}]
+                    },
+                    "generationConfig": {
+                        "temperature": 1,
+                        "topK": 40,
+                        "topP": 0.95,
+                        "maxOutputTokens": 8192,
+                        "responseMimeType": "text/plain"
+                    }
+                })
+            });
+            
+            const data = await response.json();
+            const botReply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Error: No response";
+            chatBox.innerHTML += `<div class='chat-message bot-message'>${botReply}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function displayUsername() {
+            // Create Supabase client correctly
+            const supabaseClient = supabase.createClient(
+                'https://hjionmetmiphksnptsso.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqaW9ubWV0bWlwaGtzbnB0c3NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk4OTIwMjEsImV4cCI6MjA1NTQ2ODAyMX0.-svmO28RlTGJM8iB52wn-MXSAWsUoQeLO5fkERHlWPs'
+            );
+
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (user) {
+                const { data: userData, error } = await supabaseClient
+                    .from('profiles')
+                    .select('username')
+                    .eq('id', user.id)
+                    .single();
+
+                if (!error && userData) {
+                    document.getElementById('nav-username').textContent = userData.username;
+                } else {
+                    document.getElementById('nav-username').textContent = 'User';
+                }
+            } else {
+                document.getElementById('nav-username').textContent = 'Guest';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', displayUsername);
+    </script>
+
+
+
+
+<script>
+    const hamburger = document.querySelector('.hamburger');
+    const navLinks = document.querySelector('.nav-links');
+    const links = document.querySelectorAll('.nav-link');
+
+    hamburger.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+        hamburger.classList.toggle('active');
+    });
+
+    links.forEach(link => {
+        link.addEventListener('click', () => {
+            navLinks.classList.remove('active');
+            hamburger.classList.remove('active');
+        });
+    });
+</script>
+</body>
+</html>

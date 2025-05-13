@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AvionAI Community</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #121212 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+        /* Glassmorphism Navigation */
+        .glassmorphism-nav {
+            background: rgba(22, 22, 22, 0.6);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Aesthetic Post Styling */
+        .post-container {
+            background: rgba(30, 30, 30, 0.5);
+            backdrop-filter: blur(5px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .post-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Glow Effects */
+        .glow-text {
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+
+        /* Refined Button Styles */
+        .aesthetic-btn {
+            transition: all 0.3s ease;
+            background: linear-gradient(145deg, #4CAF50, #388E3C);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .aesthetic-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Mobile Navigation Styles */
+        #mobile-nav-links {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(22, 22, 22, 0.9);
+            backdrop-filter: blur(15px);
+            z-index: 40;
+            display: flex;
+            flex-direction: column;
+            padding-top: 80px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        #mobile-nav-links.active {
+            transform: translateX(0);
+        }
+
+        #mobile-nav-links a {
+            text-align: center;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        #mobile-nav-links a:hover {
+            background-color: rgba(76, 175, 80, 0.2);
+        }
+
+        #mobile-nav-links .mobile-nav-footer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        #mobile-menu-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        #mobile-menu-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        #mobile-menu-toggle .close-icon {
+            display: none;
+        }
+
+        #mobile-menu-toggle.active .menu-icon {
+            display: none;
+        }
+
+        #mobile-menu-toggle.active .close-icon {
+            display: block;
+        }
+        .image-upload {
+            transition: all 0.3s ease;
+            background: linear-gradient(145deg, #4CAF50, #388E3C);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-transparent text-white">
+    <!-- Desktop Navigation -->
+    <nav id="desktop-nav" class="glassmorphism-nav fixed top-0 left-0 right-0 p-4 flex justify-between items-center z-50">
+        <div class="text-green-500 text-2xl font-bold glow-text">AVIONAI</div>
+        <div class="space-x-4 hidden md:flex items-center">
+            <a href="AvionAi.html" class="text-white hover:text-green-500 transition-colors">Home</a>
+            <a href="index(2).html" class="text-white hover:text-green-500 transition-colors">Bird Identifier</a>
+            <a href="community.html" class="text-white hover:text-green-500 transition-colors">Community</a>
+            <a href="chatbot.html" class="text-white hover:text-green-500 transition-colors">AI Assistant</a>
+          
+            <a href="index.html" class="aesthetic-btn text-white px-4 py-2 rounded-full">Logout</a>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation Toggle -->
+    <nav id="mobile-menu" class="glassmorphism-nav fixed top-0 left-0 right-0 p-4 flex justify-between items-center z-50 md:hidden">
+        <div class="text-green-500 text-2xl font-bold glow-text">AVIONAI</div>
+        <button id="mobile-menu-toggle">
+            <i class="fas fa-bars menu-icon"></i>
+            <i class="fas fa-times close-icon"></i>
+        </button>
+    </nav>
+
+    <!-- Mobile Navigation Links -->
+    <div id="mobile-nav-links">
+        <a href="AvionAi.html" class="text-white hover:text-green-500 transition-colors">Home</a>
+        <a href="index(2).html" class="text-white hover:text-green-500 transition-colors">Bird Identifier</a>
+        <a href="community.html" class="text-white hover:text-green-500 transition-colors">Community</a>
+        <a href="chatbot.html" class="text-white hover:text-green-500 transition-colors">AI Assistant</a>
+     
+            
+            <button id="mobile-logout-btn" class="aesthetic-btn text-white px-4 py-2 rounded-full w-full">Logout</button>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <div class="container mx-auto px-4 py-24">
+        <h1 class="text-4xl text-center text-green-500 mb-12 glow-text">AVIONAI COMMUNITY</h1>
+
+        <div class="post-container p-6 mb-12">
+            <textarea id="post-content" rows="4" placeholder="Share your bird-watching experience..." 
+                class="w-full bg-transparent text-white p-4 rounded mb-4 resize-none border border-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <input type="file" id="image-upload" accept="image/*" 
+                    class="aesthetic-btn text-white px-6 py-2 rounded-full w-full md:w-auto"></input>
+                <button onclick="createPost()" 
+                    class="aesthetic-btn text-white px-6 py-2 rounded-full w-full md:w-auto">
+                    Create Post
+                </button>
+            </div>
+        </div>
+
+        <div id="posts-container" class="space-y-6">
+            <!-- Posts will be dynamically loaded here -->
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDobdjO_G4z0jQdNiixsC7_mkVJVbcdDXM",
+            authDomain: "avion-f67ec.firebaseapp.com",
+            projectId: "avion-f67ec",
+            storageBucket: "avion-f67ec.appspot.com",
+            messagingSenderId: "559561225789",
+            appId: "1:559561225789:web:7b3ea1229af9a35e8a5c54",
+            measurementId: "G-YVCLXG80T1"
+        };
+        const firebaseApp = initializeApp(firebaseConfig);
+        const auth = getAuth(firebaseApp);
+    
+        const supabase = createClient(
+            "https://hjionmetmiphksnptsso.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqaW9ubWV0bWlwaGtzbnB0c3NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk4OTIwMjEsImV4cCI6MjA1NTQ2ODAyMX0.-svmO28RlTGJM8iB52wn-MXSAWsUoQeLO5fkERHlWPs"
+        );
+
+        // Mobile menu toggle
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const mobileNavLinks = document.getElementById('mobile-nav-links');
+
+        mobileMenuToggle.addEventListener('click', function() {
+            mobileNavLinks.classList.toggle('active');
+            mobileMenuToggle.classList.toggle('active');
+        });
+
+        // Close mobile menu when a link is clicked
+        document.querySelectorAll('#mobile-nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileNavLinks.classList.remove('active');
+                mobileMenuToggle.classList.remove('active');
+            });
+        });
+
+        window.toggleLike = async function (postId) {
+            const user = auth.currentUser;
+            if (!user) {
+                alert("Please sign in to like posts.");
+                return;
+            }
+
+            const { data: post, error } = await supabase
+                .from("posts")
+                .select("likes, liked_users")
+                .eq("id", postId)
+                .single();
+
+            if (error || !post) {
+                console.error("Error fetching post:", error);
+                return;
+            }
+
+            let likedUsers = post.liked_users || [];
+            let newLikes = post.likes;
+
+            if (likedUsers.includes(user.email)) {
+                likedUsers = likedUsers.filter(email => email !== user.email);
+                newLikes -= 1;
+            } else {
+                likedUsers.push(user.email);
+                newLikes += 1;
+            }
+
+            const { error: updateError } = await supabase
+                .from("posts")
+                .update({ likes: newLikes, liked_users: likedUsers })
+                .eq("id", postId);
+
+            if (updateError) {
+                console.error("Error updating likes:", updateError);
+            } else {
+                console.log("Like updated successfully");
+                document.getElementById(`like-count-${postId}`).textContent = newLikes;
+                document.querySelector(`[onclick="toggleLike('${postId}')"]`).classList.toggle("liked");
+            }
+            await loadPosts();
+        };
+
+        window.createPost = async function () {
+            const user = auth.currentUser;
+            if (!user) {
+                alert("Please sign in to create a post.");
+                return;
+            }
+
+            const content = document.getElementById("post-content").value;
+            const imageFile = document.getElementById("image-upload").files[0];
+
+            if (!content.trim()) {
+                alert("Post content cannot be empty!");
+                return;
+            }
+
+            let base64Image = null;
+
+            if (imageFile) {
+                const reader = new FileReader();
+                reader.readAsDataURL(imageFile);
+                await new Promise((resolve) => {
+                    reader.onload = () => {
+                        base64Image = reader.result;
+                        resolve();
+                    };
+                });
+            }
+
+            const { error: postError } = await supabase.from("posts").insert([
+                { email: user.email, content: content, base_image: base64Image, likes: 0, liked_users: [] }
+            ]);
+
+            if (postError) {
+                console.error("Error creating post:", postError);
+            } else {
+                document.getElementById("post-content").value = "";
+                document.getElementById("image-upload").value = "";
+                await loadPosts();
+            }
+        };
+
+        window.loadPosts = async function () {
+            const { data: posts, error } = await supabase
+                .from("posts")
+                .select("*")
+                .order("created_at", { ascending: false });
+
+            if (error) {
+                console.error("Error loading posts:", error);
+                return;
+            }
+
+            const postsContainer = document.getElementById("posts-container");
+            postsContainer.innerHTML = "";
+
+            for (let post of posts) {
+                const postElement = document.createElement("div");
+                postElement.className = "post-container p-6";
+                postElement.innerHTML = `
+                    <p class="text-green-500 mb-2"><strong>User:</strong> ${post.email}</p>
+                    <p class="mb-4">${post.content}</p>
+                    ${post.base_image ? `<img src="${post.base_image}" alt="Post Image" class="w-full rounded-lg mb-4">` : ""}
+                    <button class="like-btn flex items-center space-x-2 text-green-500 hover:text-green-400 transition-colors" onclick="toggleLike('${post.id}')">
+                        <i class="fas fa-heart"></i> 
+                        <span id="like-count-${post.id}">${post.likes}</span>
+                    </button>
+                `;
+                postsContainer.appendChild(postElement);
+            }
+        };
+
+        loadPosts();
+    </script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sign-In</title>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+        // Supabase Configuration
+        const supabaseUrl = "https://hjionmetmiphksnptsso.supabase.co";
+        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqaW9ubWV0bWlwaGtzbnB0c3NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk4OTIwMjEsImV4cCI6MjA1NTQ2ODAyMX0.-svmO28RlTGJM8iB52wn-MXSAWsUoQeLO5fkERHlWPs";
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDobdjO_G4z0jQdNiixsC7_mkVJVbcdDXM",
+            authDomain: "avion-f67ec.firebaseapp.com",
+            projectId: "avion-f67ec",
+            storageBucket: "avion-f67ec.firebasestorage.app",
+            messagingSenderId: "559561225789",
+            appId: "1:559561225789:web:7b3ea1229af9a35e8a5c54",
+            measurementId: "G-YVCLXG80T1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Function to sign in with Google
+        async function signInWithGoogle() {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+
+                // After successful sign-in, store user data in Supabase 'profiles' table
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .upsert({
+                        userid: user.uid,
+                        username: user.displayName,
+                        email: user.email,
+                        created_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'userid',
+                    });
+
+                if (error) {
+                    console.error("Supabase User Creation Error:", error);
+                    throw error;
+                }
+
+                // Store Firebase user details in localStorage
+                localStorage.setItem("user_email", user.email);
+                localStorage.setItem("user_uuid", user.uid);
+
+                // Redirect to AvionAi page
+                window.location.href = 'AvionAi.html';
+            } catch (error) {
+                console.error("Google Sign-In Error:", error.message);
+                alert("Sign-in failed. Please try again.");
+            }
+        }
+
+        window.onload = () => {
+            document.getElementById("googleSignIn").addEventListener("click", signInWithGoogle);
+        };
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background1.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+        .wrapper {
+            width: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border-radius: 10px;
+            padding: 40px;
+            color: #fff;
+            overflow: hidden;
+            text-align: center;
+        }
+        .title {
+            font-size: 32px;
+            margin-bottom: 30px;
+            color: #4CAF50;
+        }
+        .btn {
+            width: 100%;
+            height: 45px;
+            background: #4CAF50;
+            border-radius: 25px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn:hover {
+            background: #45a049;
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <h2 class="title">AvionAi Sign-In</h2>
+        <button id="googleSignIn" class="btn"><i class="fab fa-google"></i> Sign in with Google</button>
+    </div>
+</body>
+</html>
